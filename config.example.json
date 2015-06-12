@@ -1,0 +1,14 @@
+{
+   "images" : [
+      {
+         "file": "<local path to file>",
+         "source": "<url where image is from>",
+         "licence": "<licence used by image>",
+         "creator": "<person who took photo>",
+         "creator_link": "<link to person>",
+         "attribution": "<attribution string for image>",
+         "width": 100,
+         "height": 100
+      }
+   ]
+}
