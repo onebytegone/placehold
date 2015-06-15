@@ -17,11 +17,20 @@ class ImageFetch {
       return "{$width}x{$height}_$index";
    }
 
-   public function getPathForImage($width, $height) {
-      $identifier = $this->generateIdentifier($width, $height, '0');
-      $path = $this->pathForImage($this->storageDirectory, $identifier);
+   public function findPossibleFiles($width, $height) {
+      $allFiles = scandir($this->storageDirectory);
 
-      if (!file_exists($path)) {
+      $pattern = "/".$this->generateIdentifier($width, $height, ".*")."/";
+      return array_filter($allFiles, function ($item) use ($pattern) {
+         return preg_match($pattern, $item) == 1;
+      });
+   }
+
+   public function getPathForImage($width, $height) {
+      $files = $this->findPossibleFiles($width, $height);
+
+      $path = "";
+      if (count($files) < 3) {
          ini_set('memory_limit', 512*1024*1024);
 
          $adjust = new ImageAdjust();
@@ -34,8 +43,13 @@ class ImageFetch {
          $resized = $adjust->resize($cropped, $srcWidth, $srcHeight, $width, $height);
          $adjust->destroy($cropped);
 
+         $identifier = $this->generateIdentifier($width, $height, strval(count($files)));
+         $path = $this->pathForImage($this->storageDirectory, $identifier);
+
          $adjust->save($resized, $path);
          $adjust->destroy($resized);
+      } else {
+         $path = $this->pathForImage($this->storageDirectory, $files[array_rand($files)], '');
       }
 
       return $path;
@@ -46,6 +60,6 @@ class ImageFetch {
    }
 
    public function pathForImage($directory, $ident, $type = 'jpg') {
-      return rtrim($directory, '/') . '/' . $ident . '.' . $type;
+      return rtrim($directory, '/') . '/' . $ident . ($type !== '' ? '.' . $type : '');
    }
 }
